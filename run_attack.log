@@ -1,0 +1,154 @@
+C:\Users\Yasamin\miniconda3\envs\miaomu\lib\site-packages\torch\torch_version.py:3: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import packaging  # type: ignore[attr-defined]
+INFO:2026-01-04 18:49:04,157: - action - : loading data (mnist)
+INFO:2026-01-04 18:49:04,225: - DataStore - : folder data/split_indices/ exists, do not need to create again.
+INFO:2026-01-04 18:49:04,225: - DataStore - : folder data/shadow_models/ exists, do not need to create again.
+INFO:2026-01-04 18:49:04,225: - DataStore - : folder data/target_models/ exists, do not need to create again.
+INFO:2026-01-04 18:49:04,225: - DataStore - : folder data/attack_data/ exists, do not need to create again.
+INFO:2026-01-04 18:49:04,226: - DataStore - : folder data/attack_models/ exists, do not need to create again.
+INFO:2026-01-04 18:49:04,226: - action - : loaded data
+INFO:2026-01-04 18:49:04,227: - DataStore - : folder data/attack_data/mnist exists, do not need to create again.
+INFO:2026-01-04 18:49:04,230: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:49:04,231: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+(0, 0)
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:04,255: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.65s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.65s/it]
+INFO:2026-01-04 18:49:08,888: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:08,905: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.58s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.58s/it]
+INFO:2026-01-04 18:49:13,476: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:13,495: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.01s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.01s/it]
+INFO:2026-01-04 18:49:18,489: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:18,510: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.22s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.22s/it]
+INFO:2026-01-04 18:49:23,707: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:49:23,707: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:49:23,707: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:23,722: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.09s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.09s/it]
+INFO:2026-01-04 18:49:28,800: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:28,816: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.70s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.70s/it]
+INFO:2026-01-04 18:49:33,504: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:33,519: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.66s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.66s/it]
+INFO:2026-01-04 18:49:38,161: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:38,179: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.83s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.83s/it]
+INFO:2026-01-04 18:49:42,992: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:49:43,005: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:49:43,006: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:43,019: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.17s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.17s/it]
+INFO:2026-01-04 18:49:48,176: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:48,200: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.71s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.71s/it]
+INFO:2026-01-04 18:49:52,905: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:52,922: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.04s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.04s/it]
+INFO:2026-01-04 18:49:57,957: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:49:57,971: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.23s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.23s/it]
+INFO:2026-01-04 18:50:02,192: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:50:02,194: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:50:02,194: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:02,207: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.36s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.36s/it]
+INFO:2026-01-04 18:50:06,551: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:06,571: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.56s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.56s/it]
+INFO:2026-01-04 18:50:11,114: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:11,128: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.80s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.80s/it]
+INFO:2026-01-04 18:50:15,923: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:15,940: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.19s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.19s/it]
+INFO:2026-01-04 18:50:21,115: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:50:21,115: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:50:21,115: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:21,130: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.62s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.62s/it]
+INFO:2026-01-04 18:50:25,739: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:25,767: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.18s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.18s/it]
+INFO:2026-01-04 18:50:30,930: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:30,942: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.04s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.04s/it]
+INFO:2026-01-04 18:50:35,972: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:35,988: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.89s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.89s/it]
+INFO:2026-01-04 18:50:40,864: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:50:40,872: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:50:40,874: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+(0, 0)
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:40,879: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.36s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.36s/it]
+INFO:2026-01-04 18:50:46,239: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:46,254: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.72s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.72s/it]
+INFO:2026-01-04 18:50:50,957: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:50,973: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.75s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.75s/it]
+INFO:2026-01-04 18:50:55,708: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:50:55,728: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.58s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.58s/it]
+INFO:2026-01-04 18:51:00,287: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:51:00,287: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:51:00,287: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:00,302: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.40s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.40s/it]
+INFO:2026-01-04 18:51:04,689: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:04,703: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.63s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.63s/it]
+INFO:2026-01-04 18:51:09,317: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:09,333: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.98s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.98s/it]
+INFO:2026-01-04 18:51:14,301: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:14,315: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.28s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.28s/it]
+INFO:2026-01-04 18:51:19,587: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:51:19,594: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:51:19,596: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:19,613: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.74s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.74s/it]
+INFO:2026-01-04 18:51:24,348: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:24,365: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.83s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.83s/it]
+INFO:2026-01-04 18:51:29,181: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:29,191: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.54s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.55s/it]
+INFO:2026-01-04 18:51:33,739: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:33,755: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.87s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.87s/it]
+INFO:2026-01-04 18:51:38,629: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:51:38,629: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:51:38,629: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:38,645: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.85s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.85s/it]
+INFO:2026-01-04 18:51:43,474: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:43,489: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.73s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.73s/it]
+INFO:2026-01-04 18:51:48,218: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:48,223: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.60s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.60s/it]
+INFO:2026-01-04 18:51:52,832: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:52,832: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.32s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.32s/it]
+INFO:2026-01-04 18:51:57,150: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+INFO:2026-01-04 18:51:57,150: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+INFO:2026-01-04 18:51:57,150: - art.estimators.classification.pytorch - : Inferred 1 hidden layers on PyTorch classifier.
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:51:57,159: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.74s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.74s/it]
+INFO:2026-01-04 18:52:01,895: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:52:01,919: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.73s/it]HopSkipJump: 100%|##########| 1/1 [00:04<00:00,  4.73s/it]
+INFO:2026-01-04 18:52:06,635: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:52:06,657: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.25s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.25s/it]
+INFO:2026-01-04 18:52:11,910: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+HopSkipJump:   0%|          | 0/1 [00:00<?, ?it/s]INFO:2026-01-04 18:52:11,926: - art.attacks.evasion.hop_skip_jump - : Found initial adversarial image for untargeted attack.
+HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.02s/it]HopSkipJump: 100%|##########| 1/1 [00:05<00:00,  5.02s/it]
+INFO:2026-01-04 18:52:16,942: - art.attacks.evasion.hop_skip_jump - : Success rate of HopSkipJump attack: 100.00%
+C:\Users\Yasamin\miniconda3\envs\miaomu\lib\site-packages\sklearn\linear_model\_logistic.py:1256: FutureWarning: 'multi_class' was deprecated in version 1.5 and will be removed in 1.7. Use OneVsRestClassifier(LogisticRegression(..)) instead. Leave it to its default value to avoid this warning.
+  warnings.warn(
