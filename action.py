@@ -323,7 +323,7 @@ class ActionAttackScratch(ActionAttack):
         csv_path = os.path.join(self.attack_path + self.dataset_name, f"time_log_{name}_scratch.csv")
         csv_file = open(csv_path, "w", newline="")
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec"])
+        csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec", "query_count"])
 
         if name == 'target':
             save_path = config.TARGET_MODEL_PATH + self.save_name + '/'
@@ -338,6 +338,8 @@ class ActionAttackScratch(ActionAttack):
             save_name_original = save_path + 'original_S' + str(sample_index)
 
             model_original = torch.load(save_name_original)
+            if not hasattr(model_original, 'query_num'):
+                model_original.query_num = 0
             model_original.eval()
 
             classifier_original = PyTorchClassifier(
@@ -358,6 +360,8 @@ class ActionAttackScratch(ActionAttack):
 
                 save_name_unlearning = save_path + 'unlearning_S' + str(sample_index) + '_' + str(unlearning_set_index)
                 model_unlearning = torch.load(save_name_unlearning)
+                if not hasattr(model_unlearning, 'query_num'):
+                    model_unlearning.query_num = 0
                 model_unlearning.eval()
 
                 classifier_unlearning = PyTorchClassifier(
@@ -376,12 +380,18 @@ class ActionAttackScratch(ActionAttack):
                 start = time.time()
                 adv_before_pos = attack_original.generate(x=np.array(test_pos_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed])
+                q_count_orig = model_original.module.query_num if hasattr(model_original, 'module') else model_original.query_num
+                if hasattr(model_original, 'module'): model_original.module.query_num = 0
+                else: model_original.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed, q_count_orig])
 
                 start = time.time()
                 adv_after_pos = attack_unlearning.generate(x=np.array(test_pos_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed])
+                q_count_unlearn = model_unlearning.module.query_num if hasattr(model_unlearning, 'module') else model_unlearning.query_num
+                if hasattr(model_unlearning, 'module'): model_unlearning.module.query_num = 0
+                else: model_unlearning.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed, q_count_unlearn])
 
                 for i in range(adv_before_pos.shape[0]):
                     adv_ex_df.loc[len(adv_ex_df)] = [np.array(test_pos_case), adv_before_pos, adv_after_pos, 1]
@@ -393,12 +403,16 @@ class ActionAttackScratch(ActionAttack):
                 start = time.time()
                 adv_before_neg = attack_original.generate(x=np.array(test_neg_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 0, "original", elapsed])
+                q_count = model_original.query_num
+                model_original.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 0, "original", elapsed, q_count_orig])
 
                 start = time.time()
                 adv_after_neg = attack_unlearning.generate(x=np.array(test_neg_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed])
+                q_count = model_original.query_num
+                model_original.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed, q_count_unlearn])
 
                 for i in range(adv_before_neg.shape[0]):
                     adv_ex_df.loc[len(adv_ex_df)] = [np.array(test_neg_case), adv_before_neg, adv_after_neg, 0]
@@ -432,7 +446,7 @@ class ActionAttackSisa(ActionAttack):
         csv_path = os.path.join(self.attack_path + self.dataset_name, f"time_log_{name}_sisa.csv")
         csv_file = open(csv_path, "w", newline="")
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec"])
+        csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec", "query_count"])
 
         if name == 'target':
             save_path = config.TARGET_MODEL_PATH + self.save_name + '/'
@@ -457,10 +471,10 @@ class ActionAttackSisa(ActionAttack):
                 'stl10': (3, 10),
             }
 
+            original_models = []
             for shard_index in range(num_shard):
-                save_name = save_path + "original_S%s" % sample_index
-                original_models.append(torch.load(save_name))
-                break  # چون shard نداری
+                shard_save_name = save_path + "original_S%s_M%s" % (sample_index, shard_index)
+                original_models.append(torch.load(shard_save_name))
 
             original_model = FusedModel(original_models, dim[self.args.dataset_name])
             original_model.eval()
@@ -481,8 +495,15 @@ class ActionAttackSisa(ActionAttack):
                 n += 1
 
                 unlearning_shard_index = unlearning_shard_mapping[unlearning_index]
-                shard_save_name = save_path + "unlearning_S%s_M%s_%s" % (sample_index, unlearning_shard_index, unlearning_index)
-                shard_model = torch.load(shard_save_name)
+                prefix = "unlearning_S%s_M%s" % (sample_index, unlearning_shard_index)
+                files = [f for f in os.listdir(save_path) if f.startswith(prefix)]
+
+                if len(files) > 0:
+                    shard_save_name = os.path.join(save_path, files[0])
+                    shard_model = torch.load(shard_save_name)
+                else:
+                    print(f"File not found with prefix: {prefix}")
+                    continue
 
                 unlearning_model = FusedModel(original_models, dim[self.args.dataset_name])
                 unlearning_model.shard(unlearning_shard_index, shard_model)
@@ -503,12 +524,16 @@ class ActionAttackSisa(ActionAttack):
                 start = time.time()
                 adv_before_pos = attack_original.generate(x=np.array(test_pos_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed])
+                q_sisa = original_model.query_num
+                original_model.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed, q_sisa])
 
                 start = time.time()
                 adv_after_pos = attack_unlearning.generate(x=np.array(test_pos_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed])
+                q_sisa_un = unlearning_model.query_num
+                unlearning_model.query_num = 0
+                csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed, q_sisa_un])
 
                 for i in range(adv_before_pos.shape[0]):
                     adv_ex_df.loc[len(adv_ex_df)] = [np.array(test_pos_case), adv_before_pos, adv_after_pos, 1]
@@ -520,13 +545,12 @@ class ActionAttackSisa(ActionAttack):
                 start = time.time()
                 adv_before_neg = attack_original.generate(x=np.array(test_neg_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 0, "original", elapsed])
+                csv_writer.writerow([sample_index, unlearning_set_index, 0, "original", elapsed, q_sisa])
 
                 start = time.time()
                 adv_after_neg = attack_unlearning.generate(x=np.array(test_neg_case))
                 elapsed = time.time() - start
-                csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed])
-
+                csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed, q_sisa_un])
                 for i in range(adv_before_neg.shape[0]):
                     adv_ex_df.loc[len(adv_ex_df)] = [np.array(test_neg_case), adv_before_neg, adv_after_neg, 0]
 

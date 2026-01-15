@@ -89,6 +89,7 @@ class LeNet(nn.Module):
     def __init__(self, args):
         super(LeNet, self).__init__()
         self.args = args
+        self.query_num = 0
         # 第一个卷积块，这里输入的是3通道，彩色图。
 
         self.conv1 = nn.Sequential(
@@ -113,6 +114,7 @@ class LeNet(nn.Module):
     def forward(self, x):
         # x是输入数据，是一个tensor
         # 正向传播
+        self.query_num += 1
         x = self.conv1(x)
         x = self.conv2(x)
         x = x.view(x.size(0), -1)
@@ -124,7 +126,7 @@ class LeNet(nn.Module):
 class SimpleCNN(nn.Module):
     def __init__(self, in_dim=1, out_dim=10):
         super(SimpleCNN, self).__init__()
-
+        self.query_num = 0
         self.conv1 = nn.Conv2d(in_dim, 32, 3, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.dropout1 = nn.Dropout2d(0.25)
@@ -143,6 +145,7 @@ class SimpleCNN(nn.Module):
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
+        self.query_num += 1
         # temperature = 2
         # x /= temperature
         # return F.log_softmax(x, dim=1)
@@ -160,25 +163,38 @@ class FusedModel(nn.Module):
 
     def forward(self, x):
         self.query_num += 1
-        posteriors = torch.zeros((x.shape[0], self.out_dim)).cuda()
-        for model in self.models:
+    
+        device = x.device 
+        posteriors = torch.zeros((x.shape[0], self.out_dim)).to(device)
+        
+        active_models = [m for m in self.models if m is not None]
+        
+        for model in active_models:
+            model.to(device) 
             logits = model(x)
             posterior = F.softmax(logits, dim=1)
             posteriors += posterior
-        posteriors /= len(self.models)
+            
+        if len(active_models) > 0:
+            posteriors /= len(active_models)
+            
         return posteriors
 
     def shard(self, index, model):
+        while len(self.models) <= index: 
+            self.models.append(None)    
         self.models[index] = model
         
     def train(self: T, mode: bool = True) -> T:
         super(FusedModel, self).train(mode)
         for model in self.models:
-            model.train(mode)
+            if model is not None:
+                model.train(mode)
         return self
 
     def eval(self: T) -> T:
         super(FusedModel, self).eval()
         for model in self.models:
-            model.eval()
+            if model is not None:
+                model.eval()
         return self
