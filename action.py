@@ -294,6 +294,15 @@ class ActionAttack(Action):
         score = pred[:, 1]
         fpr, tpr, _ = roc_curve(true_label, score)
 
+        from sklearn.metrics import auc
+        attack_auc = auc(fpr, tpr)
+        print("\n" + "="*30)
+        print(f"  ATTACK RESULTS ({self.args.unlearning_method.upper()})")
+        print("="*30)
+        print(f"  Accuracy: {accuracy:.4f}")
+        print(f"  AUC Score: {attack_auc:.4f}")
+        print("="*30 + "\n")
+
 
 
 class ActionAttackScratch(ActionAttack):
@@ -334,7 +343,14 @@ class ActionAttackScratch(ActionAttack):
 
         for sample_index in range(set_num):
             sample_set = self.record_split.sample_set[sample_index]
-            unlearning_set = sample_set['unlearning_set']
+            if 'unlearning_set' in sample_set:
+                unlearning_set = sample_set['unlearning_set']
+            elif 'unlearning_indices' in sample_set:
+                unlearning_indices = sample_set['unlearning_indices']
+                unlearning_set = {0: unlearning_indices} 
+            else:
+                continue
+
             save_name_original = save_path + 'original_S' + str(sample_index)
 
             model_original = torch.load(save_name_original)
@@ -349,8 +365,12 @@ class ActionAttackScratch(ActionAttack):
                 input_shape=self.args.input_shape[self.dataset_name],
                 nb_classes=self.num_classes,
             )
-            attack_original = HopSkipJump(classifier=classifier_original, targeted=False, max_iter=50, max_eval=10000)
-
+            attack_original = HopSkipJump(
+                classifier=classifier_original, 
+                targeted=False, 
+                max_iter=10, 
+                max_eval=1000
+            )
             for unlearning_set_index, unlearning_indices in unlearning_set.items():
                 if unlearning_set_index >= self.args.shadow_unlearning_num:
                     break
@@ -372,7 +392,12 @@ class ActionAttackScratch(ActionAttack):
                     nb_classes=self.num_classes,
                 )
 
-                attack_unlearning = HopSkipJump(classifier=classifier_unlearning, targeted=False, max_iter=50, max_eval=10000)
+                attack_unlearning = HopSkipJump(
+                    classifier=classifier_unlearning, 
+                    targeted=False, 
+                    max_iter=10,    
+                    max_eval=1000
+                )
 
                 # -------- member sample (deleted record)
                 test_pos_case, _ = self._generate_test_case(unlearning_indices)
@@ -486,7 +511,15 @@ class ActionAttackSisa(ActionAttack):
                 input_shape=self.args.input_shape[self.dataset_name],
                 nb_classes=self.num_classes,
             )
-            attack_original = HopSkipJump(classifier=classifier_original, targeted=False, max_iter=50, max_eval=10000)
+            # ما تعداد Iteration ها را کم می‌کنیم تا Query-Efficient شود
+            # این اولین قدم برای نوآوری (Contribution) توست
+            attack_original = HopSkipJump(
+                classifier=classifier_original, 
+                targeted=False, 
+                max_iter=10,      # کاهش از ۵۰ به ۱۰
+                max_eval=1000,    # کاهش از ۱۰۰۰۰ به ۱۰۰۰
+                init_size=50      # محدود کردن جستجوی اولیه
+            )
 
             for unlearning_set_index, unlearning_index in enumerate(unlearning_indices):
                 if n % 5 == 0:
@@ -516,8 +549,12 @@ class ActionAttackSisa(ActionAttack):
                     input_shape=self.args.input_shape[self.dataset_name],
                     nb_classes=self.num_classes,
                 )
-                attack_unlearning = HopSkipJump(classifier=classifier_unlearning, targeted=False, max_iter=50, max_eval=10000)
-
+                attack_unlearning = HopSkipJump(
+                classifier=classifier_unlearning, 
+                targeted=False, 
+                max_iter=10, 
+                max_eval=1000
+            )
                 # -------- member sample
                 test_pos_case, _ = self._generate_test_case(unlearning_index)
 
