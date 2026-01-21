@@ -1,4 +1,5 @@
 import argparse
+from html import parser
 
 
 def str2bool(v):
@@ -81,4 +82,8 @@ def parameter_parser():
                         help="Number of deleted records to generate unlearned model")
     parser.add_argument('--target_num_shard', type=int, default=10,
                         help="Number of shards")
+    
+    parser.add_argument("--hs_max_iter", type=int, default=10)
+    parser.add_argument("--hs_max_eval", type=int, default=1000)
+    
     return parser

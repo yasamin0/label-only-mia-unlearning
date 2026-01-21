@@ -389,8 +389,9 @@ class ActionAttackScratch(ActionAttack):
             attack_original = HopSkipJump(
                 classifier=classifier_original, 
                 targeted=False, 
-                max_iter=50,
-                max_eval=10000,
+                max_iter=self.args.hs_max_iter,
+                max_eval=self.args.hs_max_eval,
+
             )
             for unlearning_set_index, unlearning_indices in unlearning_set.items():
                 if unlearning_set_index >= self.args.shadow_unlearning_num:
@@ -416,8 +417,8 @@ class ActionAttackScratch(ActionAttack):
                 attack_unlearning = HopSkipJump(
                     classifier=classifier_unlearning, 
                     targeted=False, 
-                    max_iter=50,  
-                    max_eval=10000,
+                    max_iter=self.args.hs_max_iter,
+                    max_eval=self.args.hs_max_eval,
                 )
 
                 # -------- member sample (deleted record)
@@ -550,8 +551,9 @@ class ActionAttackSisa(ActionAttack):
             attack_original = HopSkipJump(
                 classifier=classifier_original, 
                 targeted=False, 
-                max_iter=50,    
-                max_eval=10000,    
+                max_iter=self.args.hs_max_iter,
+                max_eval=self.args.hs_max_eval,
+ 
             )
 
             for unlearning_set_index, unlearning_index in enumerate(unlearning_indices):
@@ -585,8 +587,9 @@ class ActionAttackSisa(ActionAttack):
                 attack_unlearning = HopSkipJump(
                 classifier=classifier_unlearning, 
                 targeted=False, 
-                max_iter=50,
-                max_eval=10000,
+                max_iter=self.args.hs_max_iter,
+                max_eval=self.args.hs_max_eval,
+
             )
                 # -------- member sample
                 test_pos_case, _ = self._generate_test_case(unlearning_index)

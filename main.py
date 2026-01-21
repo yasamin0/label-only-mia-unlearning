@@ -1,24 +1,33 @@
 import logging
+import os, random
+import numpy as np
 import torch
 import action
+
 from parameter_parser import parameter_parser
 
 
 def config_logger():
-    # create logger
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    # create console handler
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
 
-    # create formatter and add it to the handlers
     formatter = logging.Formatter('%(levelname)s:%(asctime)s: - %(name)s - : %(message)s')
     ch.setFormatter(formatter)
 
-    # add the handlers to the logger
     logger.addHandler(ch)
+
+
+def set_seed(seed: int):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def main(args):
@@ -38,6 +47,6 @@ def main(args):
 
 if __name__ == '__main__':
     args = parameter_parser().parse_args()
+    set_seed(args.seed)   
     config_logger()
     main(args)
-

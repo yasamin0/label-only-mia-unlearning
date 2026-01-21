@@ -127,7 +127,6 @@ def dataset_split(dataset, lengths):
         raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
 
     indices = list(range(sum(lengths)))
-    np.random.seed(1)
     np.random.shuffle(indices)
     return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
 

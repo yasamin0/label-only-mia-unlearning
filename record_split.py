@@ -7,17 +7,19 @@ class RecordSplit:
         self.num_records = num_records
         self.shadow_set = {}
         self.target_set = {}
+        self.split_seed = getattr(self.args, "seed", 0)
+
 
     def split_shadow_target(self):
-        shadow_indices, target_indices = train_test_split(np.arange(self.num_records), test_size=0.5, random_state=100)
+        shadow_indices, target_indices = train_test_split(np.arange(self.num_records), test_size=0.5, random_state=self.split_seed)
         self.shadow_positive_indices, self.shadow_negative_indices = \
-            train_test_split(shadow_indices, test_size=0.2, random_state=100)
+            train_test_split(shadow_indices, test_size=0.2, random_state=self.split_seed)
         self.target_positive_indices, self.target_negative_indices = \
-            train_test_split(target_indices, test_size=0.2, random_state=100)
+            train_test_split(target_indices, test_size=0.2, random_state=self.split_seed)
         self.target_negative_indices, self.target_replace_indices = \
-            train_test_split(self.target_negative_indices, test_size=0.15, random_state=0)
+            train_test_split(self.target_negative_indices, test_size=0.15, random_state=self.split_seed)
         self.shadow_negative_indices, self.shadow_replace_indices = \
-            train_test_split(self.shadow_negative_indices, test_size=0.15, random_state=0)
+            train_test_split(self.shadow_negative_indices, test_size=0.15, random_state=self.split_seed)
 
     def sample_records(self, unlearning_method):
         if unlearning_method == "scratch":
