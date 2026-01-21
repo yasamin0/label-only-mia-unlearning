@@ -5,7 +5,7 @@ import random
 import shutil
 
 import numpy as np
-from torch._utils import _accumulate
+from itertools import accumulate
 from torch.nn import init
 from torchvision import datasets, transforms
 from PIL import Image, ImageEnhance, ImageOps
@@ -128,7 +128,8 @@ def dataset_split(dataset, lengths):
 
     indices = list(range(sum(lengths)))
     np.random.shuffle(indices)
-    return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
+    return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(accumulate(lengths), lengths)]
+
 
 
 init_param = np.sqrt(2)
