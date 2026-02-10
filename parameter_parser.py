@@ -22,7 +22,7 @@ def parameter_parser():
     parser.add_argument('--dataset_name', type=str, default='mnist', choices=['mnist', 'cifar10', 'stl10', 'cifar100'])
     parser.add_argument('--num_classes', nargs='+', default=[10, 10, 10, 100])
     parser.add_argument('--is_sample', type=str2bool, default=True)
-    parser.add_argument('--distance_type', type=int, default=0, help='0 is l0, 1 is l1, 2 is l2, 3 is linf')
+    parser.add_argument('--distance_type', type=int, default=2, help='0 is l0, 1 is l1, 2 is l2, 3 is linf')
     parser.add_argument('--is_train_multiprocess', type=str2bool, default=False)
     parser.add_argument('--Split-Size', nargs='+',
                         default=[[3000, 2000, 1500, 1000, 500, 100],  # 3000, 2000, 1500, 1000, 500, 100
@@ -38,8 +38,9 @@ def parameter_parser():
                         help='size of four shadow dataset, is a list of length 4')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of epochs to train (default: 100), mnist is 50')
-    parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                        help='learning rate (default: 0.05 for adam; 0.1 for SGD)')
+    parser.add_argument('--lr', type=float, default=0.5, metavar='LR',
+                        help='learning rate (paper setting: 0.5 for SGD)')
+
     parser.add_argument('--optim', type=str, default="SGD", choices=['Adam', 'SGD'])
     parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
                         help='SGD momentum (default: 0.5)')

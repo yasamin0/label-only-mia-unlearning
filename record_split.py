@@ -8,6 +8,7 @@ class RecordSplit:
         self.shadow_set = {}
         self.target_set = {}
         self.split_seed = getattr(self.args, "seed", 0)
+        self.rng = np.random.default_rng(self.split_seed)
 
 
     def split_shadow_target(self):
@@ -31,12 +32,15 @@ class RecordSplit:
 
     def _sample_records_scratch(self):
         for i in range(self.args.shadow_set_num):
-            shadow_set_indices = np.random.choice(self.shadow_positive_indices, self.args.shadow_set_size, replace=False)
+            shadow_set_indices = self.rng.choice(self.shadow_positive_indices, self.args.shadow_set_size, replace=False)
             shadow_unlearning_set = {}
 
-            for index, unlearning_num in enumerate(range(self.args.shadow_unlearning_size)):
-                shadow_unlearning_indices = np.random.choice(shadow_set_indices, self.args.shadow_unlearning_num, replace=False)
-                shadow_unlearning_set[index] = shadow_unlearning_indices
+            total = self.args.shadow_unlearning_size * self.args.shadow_unlearning_num
+            picked = self.rng.choice(shadow_set_indices, total, replace=False)
+            picked = picked.reshape(self.args.shadow_unlearning_size, self.args.shadow_unlearning_num)
+
+            for index in range(self.args.shadow_unlearning_size):
+                shadow_unlearning_set[index] = picked[index]
 
             self.shadow_set[i] = {
                 "set_indices": shadow_set_indices,
@@ -44,11 +48,11 @@ class RecordSplit:
             }
 
         for i in range(self.args.target_set_num):
-            target_set_indices = np.random.choice(self.target_positive_indices, self.args.target_set_size, replace=False)
+            target_set_indices = self.rng.choice(self.target_positive_indices, self.args.target_set_size, replace=False)
             target_unlearning_set = {}
 
             for index, unlearning_num in enumerate(range(self.args.target_unlearning_size)):
-                target_unlearning_indices = np.random.choice(target_set_indices, self.args.target_unlearning_num, replace=False)
+                target_unlearning_indices = self.rng.choice(target_set_indices, self.args.target_unlearning_num, replace=False)
                 target_unlearning_set[index] = target_unlearning_indices
 
             self.target_set[i] = {
@@ -58,8 +62,8 @@ class RecordSplit:
 
     def _sample_records_sisa(self):
         for i in range(self.args.shadow_set_num):
-            shadow_set_indices = np.random.choice(self.shadow_positive_indices, self.args.shadow_set_size, replace=False)
-            shadow_unlearning_indices = np.random.choice(shadow_set_indices, self.args.shadow_unlearning_size, replace=False)
+            shadow_set_indices = self.rng.choice(self.shadow_positive_indices, self.args.shadow_set_size, replace=False)
+            shadow_unlearning_indices = self.rng.choice(shadow_set_indices, self.args.shadow_unlearning_size, replace=False)
             shard_set = np.reshape(shadow_set_indices, (self.args.shadow_num_shard, -1))
             unlearning_shard_mapping = {}
 
@@ -73,8 +77,8 @@ class RecordSplit:
                 "unlearning_shard_mapping": unlearning_shard_mapping
             }
         for i in range(self.args.target_set_num):
-            target_set_indices = np.random.choice(self.target_positive_indices, self.args.target_set_size, replace=False)
-            target_unlearning_indices = np.random.choice(target_set_indices, self.args.target_unlearning_size, replace=False)
+            target_set_indices = self.rng.choice(self.target_positive_indices, self.args.target_set_size, replace=False)
+            target_unlearning_indices = self.rng.choice(target_set_indices, self.args.target_unlearning_size, replace=False)
             shard_set = np.reshape(target_set_indices, (self.args.target_num_shard, -1))
             unlearning_shard_mapping = {}
 

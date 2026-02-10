@@ -105,9 +105,9 @@ class LeNet(nn.Module):
         # 稠密块，包含三个全连接层
         self.fc = nn.Sequential(
             nn.Linear(400, 120),
-            # nn.ReLU(),
+            nn.ReLU(),
             nn.Linear(120, 84),
-            # nn.ReLU()
+            nn.ReLU()
         )
         self.out = nn.Linear(84, 10)
 

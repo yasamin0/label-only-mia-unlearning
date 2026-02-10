@@ -24,7 +24,9 @@ def main():
     splitter.sample_records(args.unlearning_method)
 
     os.makedirs(config.SPLIT_INDICES_PATH, exist_ok=True)
-    save_path = config.SPLIT_INDICES_PATH + dataset
+    from utils import DataStore
+    ds = DataStore(args)
+    save_path = config.SPLIT_INDICES_PATH + ds.save_name
 
     with open(save_path, 'wb') as f:
         pickle.dump(splitter, f)

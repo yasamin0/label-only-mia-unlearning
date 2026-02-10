@@ -28,6 +28,28 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 
+class FP32PyTorchClassifier(PyTorchClassifier):
+    def predict(self, x, batch_size=128, **kwargs):
+        x = np.asarray(x, dtype=np.float32)  # این خط کلیدی برای جلوگیری از float64
+        return super().predict(x, batch_size=batch_size, **kwargs)
+
+class ForceFloat32(nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    @property
+    def query_num(self):
+        base = self.model.module if hasattr(self.model, "module") else self.model
+        return getattr(base, "query_num", 0)
+
+    @query_num.setter
+    def query_num(self, v):
+        base = self.model.module if hasattr(self.model, "module") else self.model
+        setattr(base, "query_num", v)
+
+    def forward(self, x):
+        return self.model(x.float())
 
 class Action:
     def __init__(self, args):
@@ -54,18 +76,19 @@ class Action:
     def _determine_model(self):
         if self.dataset_name == 'mnist':
             return LeNet(self.args)
-            return SimpleCNN()
-        elif self.dataset_name in ['cifar10', 'cifar100']:
-            return CNN(self.dataset_name, self.args)
-            return models.resnet50(pretrained=False, num_classes=10)
-            return models.densenet121(pretrained=False, num_classes=10)
-
-        elif self.dataset_name == 'stl10':
+        elif self.dataset_name in ['cifar10', 'cifar100', 'stl10']:
             return CNN(self.dataset_name, self.args)
         else:
             raise Exception(f"Invalid dataset: No {self.dataset_name}, please choose in ['mnist', 'cifar10', 'stl10', "
                             f"'cifar100']")
 
+def _maybe_hsj(x_np: np.ndarray, y_true: int, clf: PyTorchClassifier, atk: HopSkipJump):
+    # y_pred from model (label-only logic)
+    y_pred = int(np.argmax(clf.predict(x_np), axis=1)[0])
+    if y_pred != int(y_true):
+    # already misclassified => perturbation is 0 (Algorithm 1)
+        return x_np.copy()
+    return atk.generate(x=x_np)
 
 class ActionModelTrain(Action):
     def __init__(self, args):
@@ -134,8 +157,7 @@ class ActionModelTrainScratch(ActionModelTrain):
         ps.cpu_affinity((cores[0:50]))
 
         for sample_index in range(num_shadows):
-            if sample_index >= 5:
-                break
+
             sample_set = self.record_split.sample_set[sample_index]
             sample_indices = sample_set['set_indices']
             unlearning_set = sample_set['unlearning_set']
@@ -143,8 +165,7 @@ class ActionModelTrainScratch(ActionModelTrain):
 
             self._train_model(sample_indices, save_name_original, model_type, sample_index, j=-1)
             for unlearning_set_index, unlearning_indices in unlearning_set.items():
-                if unlearning_set_index >= 10:
-                    break
+
                 self.logger.debug("training %s model: sample set %s | unlearning set %s" % (
                 model_type, sample_index, unlearning_set_index))
 
@@ -201,8 +222,8 @@ class ActionAttack(Action):
         super(ActionAttack, self).__init__(args)
         self.logger = logging.getLogger('action_attack')
         self.load_split_record()
-        self.attack_path = config.ATTACK_DATA_PATH
-        self.data_store.create_folder(self.attack_path + self.dataset_name)
+        self.attack_path = os.path.join(config.ATTACK_DATA_PATH, self.save_name)
+        self.data_store.create_folder(self.attack_path)
 
     def load_split_record(self):
         self.record_split = self.data_store.load_record_split()
@@ -244,8 +265,18 @@ class ActionAttack(Action):
         else:
             raise Exception('')
         for i in range(len(df)):
-            dataset.loc[len(dataset)] = [dis(df.loc[i][0], df.loc[i][1])[0], dis(df.loc[i][0], df.loc[i][2])[0],
-                                         dis(df.loc[i][1], df.loc[i][2])[0], df.loc[i][-1]]
+            row = df.iloc[i]
+            dataset.loc[len(dataset)] = [
+                dis(row.iloc[0], row.iloc[1])[0],
+                dis(row.iloc[0], row.iloc[2])[0],
+                dis(row.iloc[1], row.iloc[2])[0],
+                row.iloc[-1],
+            ]
+
+        print(name, "d1 stats:", dataset['original-original_model'].min(), dataset['original-original_model'].max())
+        print(name, "d2 stats:", dataset['original-unlearning_model'].min(), dataset['original-unlearning_model'].max())
+        print(name, "d3 stats:", dataset['original_model-unlearning_model'].min(), dataset['original_model-unlearning_model'].max())
+
         return dataset
 
     def _generate_test_case(self, index):
@@ -278,7 +309,7 @@ class ActionAttack(Action):
     def _train_attacker(self):
         self.record_split.generate_sample('shadow')
         attack_train_dataset = self.obtain_distences(self.args.distance_type, 'shadow')
-        torch.save(attack_train_dataset, self.attack_path + self.dataset_name + '/attack_train_dataset')
+        torch.save(attack_train_dataset, os.path.join(self.attack_path, 'train_adv_ex_df'))
         train_dataset = pd.DataFrame(columns=['dis1', 'dis2', 'dis3'])
         for i in range(len(attack_train_dataset)):
             train_dataset.loc[i] = [attack_train_dataset.iloc[i, 0], attack_train_dataset.iloc[i, 1],
@@ -289,7 +320,7 @@ class ActionAttack(Action):
 
         self.logistic = LogisticRegression(random_state=0, solver='lbfgs', max_iter=400, multi_class='ovr', n_jobs=1)
         self.logistic.fit(attack_train_dataset.iloc[:, 0:3], attack_train_dataset.iloc[:, -1])
-        torch.save(self.logistic, self.attack_path + self.dataset_name + '/' + self.dataset_name + '_attack_model')
+        torch.save(self.logistic, os.path.join(self.attack_path, f'{self.dataset_name}_attack_model'))
 
         self.attack = DecisionTreeClassifier(max_leaf_nodes=10, random_state=0)
         self.attack.fit(attack_train_dataset.iloc[:, 0:3], attack_train_dataset.iloc[:, -1])
@@ -297,7 +328,7 @@ class ActionAttack(Action):
     def _test_attacker(self):
         self.record_split.generate_sample('target')
         attack_test_dataset = self.obtain_distences(self.args.distance_type, 'target')
-        torch.save(attack_test_dataset, self.attack_path + self.dataset_name + '/attack_test_dataset')
+        torch.save(attack_test_dataset, os.path.join(self.attack_path, 'attack_test_dataset'))
         test_dataset = pd.DataFrame(columns=['dis1', 'dis2', 'dis3'])
         true_label = []
         for i in range(len(attack_test_dataset)):
@@ -328,9 +359,9 @@ class ActionAttackScratch(ActionAttack):
         super(ActionAttackScratch, self).__init__(args)
 
         self.train_adv_ex_df = self.obtain_adversarial_example('shadow')  # HopSkipJump
-        torch.save(self.train_adv_ex_df, self.attack_path + self.dataset_name + '/train_adv_ex_df')
+        torch.save(self.train_adv_ex_df, os.path.join(self.attack_path, 'train_adv_ex_df'))
         self.test_adv_ex_df = self.obtain_adversarial_example('target')
-        torch.save(self.test_adv_ex_df, self.attack_path + self.dataset_name + '/test_adv_ex_df')
+        torch.save(self.test_adv_ex_df, os.path.join(self.attack_path, 'test_adv_ex_df'))
 
         #self.train_adv_ex_df = torch.load(self.attack_path + self.dataset_name + '/train_adv_ex_df')
         #self.test_adv_ex_df = torch.load(self.attack_path + self.dataset_name + '/test_adv_ex_df')
@@ -340,14 +371,14 @@ class ActionAttackScratch(ActionAttack):
         attack_test_dataset = self.obtain_distences(self.args.distance_type, 'target')
 
         self.launch_attack()
-
+    
     def obtain_adversarial_example(self, name):
         n = 0
         self.record_split.generate_sample(name)
         adv_ex_df = pd.DataFrame(columns=['original', 'original model', 'unlearning model', 'mem or non-mem'])
 
         # --- CSV time logging setup
-        csv_path = os.path.join(self.attack_path + self.dataset_name, f"time_log_{name}_scratch.csv")
+        csv_path = os.path.join(os.path.join(self.attack_path, f"time_log_{name}_scratch.csv"))
         csv_file = open(csv_path, "w", newline="")
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec", "query_count"])
@@ -371,42 +402,41 @@ class ActionAttackScratch(ActionAttack):
 
             save_name_original = save_path + 'original_S' + str(sample_index)
 
-            model_original = torch.load(save_name_original)
-            if hasattr(model_original, "module"):
-                model_original.module.query_num = 0
-            else:
-                model_original.query_num = 0
+            model_original = torch.load(save_name_original, weights_only=False)
+            model_original = ForceFloat32(model_original).float().eval()  
 
-            model_original.eval()
+            model_original.query_num = 0  
 
-            classifier_original = PyTorchClassifier(
+            classifier_original = FP32PyTorchClassifier(   
                 model=model_original,
                 clip_values=self._get_clip_values(),
                 loss=F.cross_entropy,
                 input_shape=self.args.input_shape[self.dataset_name],
                 nb_classes=self.num_classes,
             )
+
             attack_original = HopSkipJump(
-                classifier=classifier_original, 
-                targeted=False, 
+                classifier=classifier_original,
+                targeted=False,
                 max_iter=self.args.hs_max_iter,
                 max_eval=self.args.hs_max_eval,
-
+                batch_size=1,
             )
+            limit = self.args.target_unlearning_size if name == "target" else self.args.shadow_unlearning_size
             for unlearning_set_index, unlearning_indices in unlearning_set.items():
-                if unlearning_set_index >= self.args.shadow_unlearning_num:
+                if unlearning_set_index >= limit:
                     break
                 if n % 5 == 0:
                     print((sample_index, unlearning_set_index))
                 n += 1
 
                 save_name_unlearning = save_path + 'unlearning_S' + str(sample_index) + '_' + str(unlearning_set_index)
-                model_unlearning = torch.load(save_name_unlearning)
-                if not hasattr(model_unlearning, 'query_num'):
-                    model_unlearning.query_num = 0
-                model_unlearning.eval()
+                model_unlearning = torch.load(save_name_unlearning, weights_only=False)
+                model_unlearning = ForceFloat32(model_unlearning).float().eval()  
 
-                classifier_unlearning = PyTorchClassifier(
+                model_unlearning.query_num = 0
+
+                classifier_unlearning = FP32PyTorchClassifier(  
                     model=model_unlearning,
                     clip_values=self._get_clip_values(),
                     loss=F.cross_entropy,
@@ -415,70 +445,82 @@ class ActionAttackScratch(ActionAttack):
                 )
 
                 attack_unlearning = HopSkipJump(
-                    classifier=classifier_unlearning, 
-                    targeted=False, 
+                    classifier=classifier_unlearning,
+                    targeted=False,
                     max_iter=self.args.hs_max_iter,
                     max_eval=self.args.hs_max_eval,
+                    batch_size=1,
                 )
 
                 # -------- member sample (deleted record)
-                test_pos_case, _ = self._generate_test_case(unlearning_indices)
+                test_pos_case, y_pos = self._generate_test_case(unlearning_indices)
 
+                x_pos = test_pos_case.detach().cpu().numpy().astype(np.float32)
+                pred_o = int(np.argmax(classifier_original.predict(x_pos), axis=1)[0])
+                pred_u = int(np.argmax(classifier_unlearning.predict(x_pos), axis=1)[0])
+                if pred_o != int(y_pos) or pred_u != int(y_pos):
+                    continue
+
+                # --- original model (member)
                 start = time.time()
-                adv_before_pos = attack_original.generate(x=np.array(test_pos_case))
+                adv_before_pos = _maybe_hsj(x_pos, y_pos, classifier_original, attack_original)
                 elapsed = time.time() - start
-                q_count_orig = model_original.module.query_num if hasattr(model_original, 'module') else model_original.query_num
-                if hasattr(model_original, 'module'): model_original.module.query_num = 0
-                else: model_original.query_num = 0
+                q_count_orig = model_original.query_num
+                model_original.query_num = 0
                 csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed, q_count_orig])
 
+                # --- unlearning model (member)
                 start = time.time()
-                adv_after_pos = attack_unlearning.generate(x=np.array(test_pos_case))
+                adv_after_pos = _maybe_hsj(x_pos, y_pos, classifier_unlearning, attack_unlearning)
                 elapsed = time.time() - start
-                q_count_unlearn = model_unlearning.module.query_num if hasattr(model_unlearning, 'module') else model_unlearning.query_num
-                if hasattr(model_unlearning, 'module'): model_unlearning.module.query_num = 0
-                else: model_unlearning.query_num = 0
+                q_count_unlearn = model_unlearning.query_num
+                model_unlearning.query_num = 0
+
                 csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed, q_count_unlearn])
 
-                x_pos = np.array(test_pos_case)
+                # ذخیره در دیتافریم مثل قبل
+                x_pos_store = np.array(test_pos_case)
                 for i in range(adv_before_pos.shape[0]):
-                    adv_ex_df.loc[len(adv_ex_df)] = [x_pos[i], adv_before_pos[i], adv_after_pos[i], 1]
+                    adv_ex_df.loc[len(adv_ex_df)] = [x_pos_store[i], adv_before_pos[i], adv_after_pos[i], 1]
 
                 # -------- non-member sample
-                neg_index = np.random.choice(self.record_split.negative_indices, size=unlearning_indices.size)
-                test_neg_case, _ = self._generate_test_case(neg_index)
+                local_seed = int(self.args.seed) * 1000003 + sample_index * 1009 + unlearning_set_index
+                rng = np.random.default_rng(local_seed)
+                neg_index = rng.choice(self.record_split.negative_indices, size=unlearning_indices.size, replace=False)
+
+                test_neg_case, y_neg = self._generate_test_case(neg_index)
+                x_neg = test_neg_case.detach().cpu().numpy().astype(np.float32)
+
+                # فیلتر مثل member
+                #pred_o = int(np.argmax(classifier_original.predict(x_neg), axis=1)[0])
+                #pred_u = int(np.argmax(classifier_unlearning.predict(x_neg), axis=1)[0])
+                #if pred_o != int(y_neg) or pred_u != int(y_neg):
+                #    continue
 
                 # --- original model (non-member)
                 start = time.time()
-                adv_before_neg = attack_original.generate(x=np.array(test_neg_case))
+                adv_before_neg = _maybe_hsj(x_neg, y_neg, classifier_original, attack_original)
                 elapsed = time.time() - start
-
-                q_count_orig_neg = model_original.module.query_num if hasattr(model_original, "module") else model_original.query_num
-                if hasattr(model_original, "module"):
-                    model_original.module.query_num = 0
-                else:
-                    model_original.query_num = 0
-
+                q_count_orig_neg = model_original.query_num
+                model_original.query_num = 0
                 csv_writer.writerow([sample_index, unlearning_set_index, 0, "original", elapsed, q_count_orig_neg])
 
                 # --- unlearning model (non-member)
                 start = time.time()
-                adv_after_neg = attack_unlearning.generate(x=np.array(test_neg_case))
+                adv_after_neg = _maybe_hsj(x_neg, y_neg, classifier_unlearning, attack_unlearning)
                 elapsed = time.time() - start
-
-                q_count_unlearn_neg = model_unlearning.module.query_num if hasattr(model_unlearning, "module") else model_unlearning.query_num
-                if hasattr(model_unlearning, "module"):
-                    model_unlearning.module.query_num = 0
-                else:
-                    model_unlearning.query_num = 0
-
+                q_count_unlearn_neg = model_unlearning.query_num
+                model_unlearning.query_num = 0
                 csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed, q_count_unlearn_neg])
 
-                x_neg = np.array(test_neg_case)
+                x_neg_store = np.array(test_neg_case)
                 for i in range(adv_before_neg.shape[0]):
-                    adv_ex_df.loc[len(adv_ex_df)] = [x_neg[i], adv_before_neg[i], adv_after_neg[i], 0]
+                    adv_ex_df.loc[len(adv_ex_df)] = [x_neg_store[i], adv_before_neg[i], adv_after_neg[i], 0]
+
 
         csv_file.close()
+        print(f"[{name}] adv_ex_df rows =", len(adv_ex_df))
+
         return adv_ex_df
 
 
@@ -488,13 +530,13 @@ class ActionAttackSisa(ActionAttack):
         super(ActionAttackSisa, self).__init__(args)
 
         self.train_adv_ex_df = self.obtain_adversarial_example('shadow')  # HopSkipJump
-        torch.save(self.train_adv_ex_df, self.attack_path + self.dataset_name + '/sisa_train_adv_ex_df')
+        torch.save(self.train_adv_ex_df, os.path.join(self.attack_path, 'sisa_train_adv_ex_df'))
         self.test_adv_ex_df = self.obtain_adversarial_example('target')
-        torch.save(self.test_adv_ex_df, self.attack_path + self.dataset_name + '/sisa_test_adv_ex_df')
-        self.train_adv_ex_df = torch.load(self.attack_path + self.dataset_name + '/sisa_train_adv_ex_df')
-        self.test_adv_ex_df = torch.load(self.attack_path + self.dataset_name + '/sisa_test_adv_ex_df')
-        self.train_dataset = torch.load(self.attack_path + self.dataset_name + '/attack_train_dataset')
-        self.test_dataset = torch.load(self.attack_path + self.dataset_name + '/attack_test_dataset')
+        torch.save(self.test_adv_ex_df, os.path.join(self.attack_path, 'sisa_test_adv_ex_df'))
+        self.train_adv_ex_df = torch.load(os.path.join(self.attack_path, 'sisa_train_adv_ex_df'))
+        self.test_adv_ex_df = torch.load(os.path.join(self.attack_path, 'sisa_test_adv_ex_df'))
+        self.train_dataset = torch.load(os.path.join(self.attack_path, 'attack_train_dataset'))
+        self.test_dataset = torch.load(os.path.join(self.attack_path, 'attack_test_dataset'))
 
         self.launch_attack()
 
@@ -504,7 +546,7 @@ class ActionAttackSisa(ActionAttack):
         adv_ex_df = pd.DataFrame(columns=['original', 'original model', 'unlearning model', 'mem or non-mem'])
 
         # --- CSV time logging setup
-        csv_path = os.path.join(self.attack_path + self.dataset_name, f"time_log_{name}_sisa.csv")
+        csv_path = os.path.join(os.path.join(self.attack_path, f"time_log_{name}_sisa.csv"))
         csv_file = open(csv_path, "w", newline="")
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow(["sample_index", "unlearning_set_index", "label", "model_type", "elapsed_time_sec", "query_count"])
@@ -518,8 +560,7 @@ class ActionAttackSisa(ActionAttack):
             set_num = self.args.shadow_set_num
             num_shard = self.args.shadow_num_shard
 
-        MAX_SHADOW = 5
-        for sample_index in range(min(set_num, MAX_SHADOW)):
+        for sample_index in range(set_num):
             sample_set = self.record_split.sample_set[sample_index]
             unlearning_indices = sample_set["unlearning_indices"]
             unlearning_shard_mapping = sample_set["unlearning_shard_mapping"]
@@ -535,12 +576,12 @@ class ActionAttackSisa(ActionAttack):
             original_models = []
             for shard_index in range(num_shard):
                 shard_save_name = save_path + "original_S%s_M%s" % (sample_index, shard_index)
-                original_models.append(torch.load(shard_save_name))
+                original_models.append(torch.load(shard_save_name, weights_only=False))
 
-            original_model = FusedModel(original_models, dim[self.args.dataset_name])
-            original_model.eval()
+                original_model = FusedModel(original_models, dim[self.args.dataset_name])
+                original_model = ForceFloat32(original_model).float().eval()
 
-            classifier_original = PyTorchClassifier(
+                classifier_original = FP32PyTorchClassifier(
                 model=original_model,
                 clip_values=self._get_clip_values(),
                 loss=F.cross_entropy,
@@ -549,17 +590,17 @@ class ActionAttackSisa(ActionAttack):
             )
 
             attack_original = HopSkipJump(
-                classifier=classifier_original, 
-                targeted=False, 
+                classifier=classifier_original,
+                targeted=False,
                 max_iter=self.args.hs_max_iter,
                 max_eval=self.args.hs_max_eval,
- 
+                batch_size=1,
             )
 
             for unlearning_set_index, unlearning_index in enumerate(unlearning_indices):
                 if n % 5 == 0:
                     print((sample_index, unlearning_set_index))
-                    torch.save(adv_ex_df, self.attack_path + self.dataset_name + '/sisa_' + name + '_adv_ex_df')
+                    torch.save(adv_ex_df, os.path.join(self.attack_path, f'sisa_{name}_adv_ex_df'))
                 n += 1
 
                 unlearning_shard_index = unlearning_shard_mapping[unlearning_index]
@@ -568,7 +609,7 @@ class ActionAttackSisa(ActionAttack):
 
                 if len(files) > 0:
                     shard_save_name = os.path.join(save_path, files[0])
-                    shard_model = torch.load(shard_save_name)
+                    shard_model = torch.load(shard_save_name, weights_only=False)
                 else:
                     print(f"File not found with prefix: {prefix}")
                     continue
@@ -577,7 +618,9 @@ class ActionAttackSisa(ActionAttack):
                 unlearning_model.shard(unlearning_shard_index, shard_model)
                 unlearning_model.eval()
 
-                classifier_unlearning = PyTorchClassifier(
+                unlearning_model = ForceFloat32(unlearning_model).float().eval()
+
+                classifier_unlearning = FP32PyTorchClassifier(
                     model=unlearning_model,
                     clip_values=self._get_clip_values(),
                     loss=F.cross_entropy,
@@ -585,24 +628,32 @@ class ActionAttackSisa(ActionAttack):
                     nb_classes=self.num_classes,
                 )
                 attack_unlearning = HopSkipJump(
-                classifier=classifier_unlearning, 
-                targeted=False, 
-                max_iter=self.args.hs_max_iter,
-                max_eval=self.args.hs_max_eval,
+                    classifier=classifier_unlearning,
+                    targeted=False,
+                    max_iter=self.args.hs_max_iter,
+                    max_eval=self.args.hs_max_eval,
+                    batch_size=1,
+                )
 
-            )
                 # -------- member sample
-                test_pos_case, _ = self._generate_test_case(unlearning_index)
+                test_pos_case, y_pos = self._generate_test_case(unlearning_index)
 
                 start = time.time()
-                adv_before_pos = attack_original.generate(x=np.array(test_pos_case))
+                x_pos = test_pos_case.detach().cpu().numpy().astype(np.float32)
+                #pred_o = int(np.argmax(classifier_original.predict(x_pos), axis=1)[0])
+                #pred_u = int(np.argmax(classifier_unlearning.predict(x_pos), axis=1)[0])
+                #if pred_o != int(y_pos) or pred_u != int(y_pos):
+                #   continue
+                adv_before_pos = attack_original.generate(x=x_pos)
+
                 elapsed = time.time() - start
                 q_sisa = original_model.query_num
                 original_model.query_num = 0
                 csv_writer.writerow([sample_index, unlearning_set_index, 1, "original", elapsed, q_sisa])
 
                 start = time.time()
-                adv_after_pos = attack_unlearning.generate(x=np.array(test_pos_case))
+                adv_after_pos  = attack_unlearning.generate(x=x_pos)
+
                 elapsed = time.time() - start
                 q_sisa_un = unlearning_model.query_num
                 unlearning_model.query_num = 0
@@ -613,12 +664,17 @@ class ActionAttackSisa(ActionAttack):
                     adv_ex_df.loc[len(adv_ex_df)] = [x_pos[i], adv_before_pos[i], adv_after_pos[i], 1]
 
                 # -------- non-member sample
-                neg_indices = np.random.choice(self.record_split.negative_indices, unlearning_indices.size, replace=False)
+                local_seed = int(self.args.seed) * 1000003 + sample_index * 1009 + unlearning_set_index
+                rng = np.random.default_rng(local_seed)
+                neg_indices = rng.choice(self.record_split.negative_indices, unlearning_indices.size, replace=False)
+
                 test_neg_case, _ = self._generate_test_case(neg_indices)
 
                 # --- original model (non-member)
                 start = time.time()
-                adv_before_neg = attack_original.generate(x=np.array(test_neg_case))
+                x_neg = test_neg_case.detach().cpu().numpy().astype(np.float32)
+                adv_before_neg = attack_original.generate(x=x_neg)
+
                 elapsed = time.time() - start
 
                 q_sisa_neg = original_model.query_num
@@ -627,7 +683,8 @@ class ActionAttackSisa(ActionAttack):
 
                 # --- unlearning model (non-member)
                 start = time.time()
-                adv_after_neg = attack_unlearning.generate(x=np.array(test_neg_case))
+                adv_after_neg  = attack_unlearning.generate(x=x_neg)
+
                 elapsed = time.time() - start
 
                 q_sisa_un_neg = unlearning_model.query_num

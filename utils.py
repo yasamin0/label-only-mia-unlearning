@@ -185,7 +185,19 @@ class DataStore:
             self.create_folder(folder)
 
     def determine_data_path(self):
-        self.save_name = self.args.dataset_name
+        a = self.args
+        self.save_name = (
+            f"{a.dataset_name}"
+            f"__{a.unlearning_method}"
+            f"__seed{a.seed}"
+            f"__ss{a.shadow_set_size}_ts{a.target_set_size}"
+            f"__snum{a.shadow_set_num}_tnum{a.target_set_num}"
+            f"__sulsize{a.shadow_unlearning_size}_tulsize{a.target_unlearning_size}"
+            f"__sulnum{a.shadow_unlearning_num}_tulnum{a.target_unlearning_num}"
+            f"__shardS{a.shadow_num_shard}_shardT{a.target_num_shard}"
+            f"__ep{a.epochs}_lr{a.lr}"
+        )
+
         self.target_model_name = config.TARGET_MODEL_PATH + self.save_name
         self.shadow_model_name = config.SHADOW_MODEL_PATH + self.save_name
         self.attack_train_data = config.SHADOW_MODEL_PATH + "posterior" + self.save_name
@@ -220,8 +232,7 @@ class DataStore:
         pass
 
     def save_record_split(self, record_split):
-        if not os.path.exists(config.SPLIT_INDICES_PATH + self.save_name):
-            pickle.dump(record_split, open(config.SPLIT_INDICES_PATH + self.save_name, 'wb'))
+        pickle.dump(record_split, open(config.SPLIT_INDICES_PATH + self.save_name, 'wb'))
 
     def load_record_split(self):
         record_split = pickle.load(open(config.SPLIT_INDICES_PATH + self.save_name, 'rb'))

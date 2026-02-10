@@ -10,6 +10,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train_model(args, model, train_loader, model_type, save_path=None):
     logging.info(f'training {model_type} model in {args.dataset_name}')
 
+    import random
+    import numpy as np
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
+
     model = model.to(device)
     model.train()
 
@@ -19,20 +27,44 @@ def train_model(args, model, train_loader, model_type, save_path=None):
     if args.optim == 'Adam':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     elif args.optim == 'SGD':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
     else:
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    optimizer,
+    milestones=[int(args.epochs*0.5), int(args.epochs*0.75)],
+    gamma=0.1
+)
+    
     for epoch in range(1, args.epochs + 1):
         for step, (x, y) in enumerate(train_loader):
             x = x.to(device)
             y = y.to(device)
 
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
+
             output = model(x)
             loss = loss_func(output, y)
             loss.backward()
             optimizer.step()
+        
+        scheduler.step()
+
+        with torch.no_grad():
+            model.eval()
+            correct = 0
+            total = 0
+            for xb, yb in train_loader:
+                xb, yb = xb.to(device), yb.to(device)
+                pred = model(xb).argmax(1)
+                correct += (pred == yb).sum().item()
+                total += yb.size(0)
+            acc = correct / total
+            logging.info(f"[{model_type}] epoch={epoch} train-acc={acc:.4f}")
+            model.train()
+
+
 
     if save_path:
         torch.save(model, save_path)
