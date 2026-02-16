@@ -267,10 +267,10 @@ class ActionAttack(Action):
         for i in range(len(df)):
             row = df.iloc[i]
             dataset.loc[len(dataset)] = [
-                dis(row.iloc[0], row.iloc[1])[0],
-                dis(row.iloc[0], row.iloc[2])[0],
-                dis(row.iloc[1], row.iloc[2])[0],
-                row.iloc[-1],
+                float(dis(row.iloc[0], row.iloc[1])[0]),
+                float(dis(row.iloc[0], row.iloc[2])[0]),
+                float(dis(row.iloc[1], row.iloc[2])[0]),
+                int(row.iloc[-1]),
             ]
 
         print(name, "d1 stats:", dataset['original-original_model'].min(), dataset['original-original_model'].max())
@@ -309,7 +309,7 @@ class ActionAttack(Action):
     def _train_attacker(self):
         self.record_split.generate_sample('shadow')
         attack_train_dataset = self.obtain_distences(self.args.distance_type, 'shadow')
-        torch.save(attack_train_dataset, os.path.join(self.attack_path, 'train_adv_ex_df'))
+        torch.save(attack_train_dataset, os.path.join(self.attack_path, 'attack_train_dataset'))
         train_dataset = pd.DataFrame(columns=['dis1', 'dis2', 'dis3'])
         for i in range(len(attack_train_dataset)):
             train_dataset.loc[i] = [attack_train_dataset.iloc[i, 0], attack_train_dataset.iloc[i, 1],
@@ -423,9 +423,13 @@ class ActionAttackScratch(ActionAttack):
                 batch_size=1,
             )
             limit = self.args.target_unlearning_size if name == "target" else self.args.shadow_unlearning_size
+            processed = 0
+
             for unlearning_set_index, unlearning_indices in unlearning_set.items():
-                if unlearning_set_index >= limit:
+                if processed >= limit:
                     break
+                processed += 1
+
                 if n % 5 == 0:
                     print((sample_index, unlearning_set_index))
                 n += 1
@@ -478,9 +482,12 @@ class ActionAttackScratch(ActionAttack):
 
                 csv_writer.writerow([sample_index, unlearning_set_index, 1, "unlearning", elapsed, q_count_unlearn])
 
-                # ذخیره در دیتافریم مثل قبل
-                x_pos_store = np.array(test_pos_case)
-                for i in range(adv_before_pos.shape[0]):
+                # ذخیره در دیتافریم: همه چیز numpy float32 و هم‌مقیاس
+                x_pos_store = x_pos.copy().astype(np.float32)              # (1,1,28,28)
+                adv_before_pos = adv_before_pos.astype(np.float32)
+                adv_after_pos  = adv_after_pos.astype(np.float32)
+
+                for i in range(x_pos_store.shape[0]):
                     adv_ex_df.loc[len(adv_ex_df)] = [x_pos_store[i], adv_before_pos[i], adv_after_pos[i], 1]
 
                 # -------- non-member sample
@@ -513,10 +520,12 @@ class ActionAttackScratch(ActionAttack):
                 model_unlearning.query_num = 0
                 csv_writer.writerow([sample_index, unlearning_set_index, 0, "unlearning", elapsed, q_count_unlearn_neg])
 
-                x_neg_store = np.array(test_neg_case)
-                for i in range(adv_before_neg.shape[0]):
-                    adv_ex_df.loc[len(adv_ex_df)] = [x_neg_store[i], adv_before_neg[i], adv_after_neg[i], 0]
+                x_neg_store = x_neg.copy().astype(np.float32)
+                adv_before_neg = adv_before_neg.astype(np.float32)
+                adv_after_neg  = adv_after_neg.astype(np.float32)
 
+                for i in range(x_neg_store.shape[0]):
+                    adv_ex_df.loc[len(adv_ex_df)] = [x_neg_store[i], adv_before_neg[i], adv_after_neg[i], 0]
 
         csv_file.close()
         print(f"[{name}] adv_ex_df rows =", len(adv_ex_df))
